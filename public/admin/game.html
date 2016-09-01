@@ -1,0 +1,363 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>My Parse App</title>
+  <meta name="description" content="My Parse App">
+  <meta name="viewport" content="width=device-width">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  
+  <script src="http://code.jquery.com/jquery.js"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone.js" ></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+  <script src="c3/c3.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+  <script src="js/parse.min.js" ></script>
+  <style>
+    table#map td{
+      width: 64px;
+      height: 64px;
+      border: 2px solid black;
+      z-index: 0;
+
+
+      
+    }
+    .tile-overlay:hover{
+        opacity: 0;
+        cursor: pointer;
+        background-color: rgba(255,153,0, 0.0);
+    }
+
+    body{
+      overflow-x: hidden;
+    }
+    
+    .tile-number {
+      color: white;
+      float: left;
+      margin-top: -64px;
+    opacity: 1.0;
+    /*  width: 64px;*/
+      text-align: center;
+      z-index: 50;
+      /*height: 64px;*/
+      width: 50px;
+      height: 50px;
+     padding: 0px;
+     border-radius: 50%;
+     top: 8px;
+      margin-left: 8px;
+      font-size: 30px;
+    }
+    #table{
+      height: 512px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+
+<body>
+
+  
+<div>
+<table>
+  <tr>
+    <td style="background-color: red;">
+    </td>
+    <td style="background-color: green;">
+    </td>
+  </tr>
+</table>
+
+
+
+<div  >
+  <div class="row">
+
+
+    <div class="col-md-6">
+      
+          <div id="gameMap">
+          </div>
+    </div>
+    <div class="col-md-6">
+      <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+        <li class=""><a href="#moves" id="gameTab" data-toggle="tab">Game <b>(1)</b></a></li>
+        <li class="active"><a href="#summary" id="sumTab" data-toggle="tab">Summary <b>(2)</b></a></li>
+        <li><a href="#replay" id ="replayTab" data-toggle="tab">Replay <b>(3)</b></a></li>
+        <li><a href="#buttons" id="buttonsTab" data-toggle="tab">Buttons <b>(4)</b></a></li>
+    </ul>
+    <div id="my-tab-content" class="tab-content">
+        <div class="tab-pane" id="moves">
+          <div id="table">
+
+          </div>
+        </div>
+        <div class="tab-pane active" id="summary">
+            
+        </div>
+        <div class="tab-pane" id="replay">
+            
+        </div>
+        <div class="tab-pane" id="buttons">
+            
+        </div>
+        
+    </div>
+      
+    </div>
+
+    
+    
+
+  </div>
+</div>
+
+</div>
+
+
+
+  
+   
+  <div id="gameSummary">
+  </div>
+  
+  <script id="game-summary-row-tpl" type="text/x-handlebars-template">
+      <div class="col-md-2">
+        <div class="bg-primary">
+          <center>
+          <h4> Game Summary </h4>
+          </center>
+        </div>
+        </div>
+      <div class="col-md-2">
+        <div class="bg-success">
+            <center>
+            {{ TilesInline }} <br>
+            Tiles Inline
+            </center>
+        </div>
+        </div>
+        <div class="col-md-2">
+        <div class="bg-danger">
+            <center>
+            {{ TilesOutline }} <br>
+            Tiles Out Line
+            </center>
+        </div>
+        </div>
+
+        <div class="col-md-2">
+        <div class="bg-info">
+            <center>
+            {{ TilesPlaced }} <br>
+            Tiles Placed
+            </center>
+        </div>
+        </div>
+
+        <div class="col-md-2">
+        <div class="bg-info">
+            <center>
+            {{ convertTime StartTime }} <br>
+            Start Time
+            </center>
+        </div>
+        </div>
+
+        <div class="col-md-2">
+        <div class="bg-info">
+            <center>
+            {{ convertTime EndTime }} <br>
+            End Time
+            </center>
+        </div>
+        </div>
+
+        <div class="col-md-2">
+        <div class="bg-info">
+            <center>
+            {{ PointsScored }} <br>
+            Points Scored
+            </center>
+        </div>
+        </div>
+
+        <div class="col-md-2">
+        <div class="bg-info">
+            <center>
+            {{ BonusScore }} <br>
+            Bonus Score
+            </center>
+        </div>
+        </div>
+
+
+    </div>
+  </script>
+
+  <script id="button-press-row-tpl" type="text/x-handlebars-template">
+  </script>
+
+  <script id="replay-tpl" type="text/x-handlebars-template" >
+    Tray: <br/>
+    <img src="img/tiles/{{T1}}.png">
+    <img src="img/tiles/{{T2}}.png">
+    <img src="img/tiles/{{T3}}.png">
+    {{ current }} / {{ total }} <br/> <br/>
+    Tile Played: <img src="img/tiles/{{played}}.png">
+  </script>
+
+  <script id="button-press-row-tpl" type="text/x-handlebars-template">
+    <table  class="table table-bordered table-hover">
+    <tr >
+      <th>
+        Button Type
+      </th>
+      
+      <th>
+        Time
+      </th>
+    </tr>
+  
+    </table>
+  </script>
+
+  <script id="move-table-row-tpl" type="text/x-handlebars-template">
+    <table  class="table table-bordered table-hover">
+    <tr >
+      <th>
+        Move
+      </th>
+      
+      <th>
+        Tile
+      </th>
+      <th>
+        Time From Last
+      </th>
+      <th>
+        Inline
+      </th>
+    </tr>
+    {{#each gameMove}}
+    <tr>
+     
+        <td>
+          {{@index }}
+        </td>
+        
+        <td>
+          <img src="img/tiles/{{attributes.Tile}}.png">
+          
+          
+        </td>
+        <td>
+          {{ attributes.TimeFromLastPlacement }}
+        </td>
+        {{#if attributes.Inline}}
+        <td style="background-color: green; color: white;">
+          Yes
+        </td>
+        {{else}}
+        <td style="background-color: red; color: white;">
+          No
+        </td>
+        {{/if}}
+      
+    </tr>
+    {{/each}}
+    </table>
+  </script>
+
+  <script id="map-tpl" type="text/x-handlebars-template">
+    <table id="map">
+     <!-- <tr>
+        <td>
+          <img src="img/tiles/1.png" >
+        </td>
+        
+      </tr>-->
+      {{#each mapTile}}
+
+      <tr>
+      
+        {{#each this}}
+        <td>
+          <img src="img/tiles/{{tile}}.png" style="float: left;">
+          {{#if move}}
+            
+            
+                  <div class="tile-number move-{{move}}">
+                  {{ move }}
+                  </div>
+          
+
+          {{/if}}
+
+        </td>
+        {{/each}}
+      </tr>
+      {{/each}}
+    </table>
+  </script>
+  <script id="summary-tpl" type="text/x-handlebars-template">
+    <table class="table table-bordered table-hover">
+      <tr>
+        <th>T1 (speed) </th>
+        <th>T2 (erase) </th>
+        <th>T3 (discard) </th>
+        <th>T4 (loop) </th>
+        <th>T5 (extend) </th>
+        <th>T6 (play ahead)</th>
+        <th>T7 (cont loop)</th>
+      </tr>
+      <tr>
+        <td>
+          {{ T1 }}
+        </td>
+        <td>
+          {{ T2 }}
+        </td>
+        <td>
+          {{ T3 }}
+        </td>
+        <td>
+          {{ T4 }}
+        </td>
+        <td>
+          {{ T5 }}
+        </td>
+        <td>
+          {{ T6 }}
+        </td>
+        <td>
+          {{ T7 }}
+        </td>
+      </tr>
+    </table>
+    <textarea rows="5" cols="50" id="notes">{{ notes }}</textarea> <br>
+    {{#if reviewed}}
+      <input type="checkbox" id="reviewed" checked> I have finished reviewing this game. <b>(r)</b><br>
+    {{else}}
+      <input type="checkbox" id="reviewed"> I have finished reviewing this game. <b>(r)</b><br> 
+    {{/if}}
+    <input type="button" id="SaveButton" value="Save"> <b>ctrl + s</b>
+  </script>
+
+  <script type="text/javascript" src="js/init.js"> </script>
+
+  <script type="text/javascript" src="js/navigation.js">
+  </script>
+  <script type="text/javascript" src="js/analysis.js">
+  </script>
+  
+  <script type="text/javascript" src="js/game.js">
+  </script>
+</body>
+
+</html>

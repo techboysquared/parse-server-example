@@ -1,0 +1,185 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>My Parse App</title>
+  <meta name="description" content="My Parse App">
+  <meta name="viewport" content="width=device-width">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  
+  <script src="http://code.jquery.com/jquery.js"></script> 
+  <!--
+  <script type="text/javascript" src="http://www.parsecdn.com/js/parse-1.4.2.min.js"></script>-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone.js" ></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+  <script src="js/parse.min.js" ></script>
+  <style>
+    table#map td{
+      width: 64px;
+      height: 64px;
+      border: 2px solid black;
+      z-index: 0;
+
+
+      
+    }
+  .tile-overlay{
+      
+      float: left; 
+      height: 64px; 
+      width: 64px; 
+      z-index: 10;
+     background-color: rgba(255,153,0, 0.75);
+     background-blend-mode: darken, luminosity;
+      opacity: .6;
+      border: 2px solid red;
+      
+    }
+    .tile-overlay:hover{
+        opacity: 0;
+        cursor: pointer;
+        background-color: rgba(255,153,0, 0.0);
+    }
+    .tile-number {
+      color: white;
+      float: left;
+      margin-top: -64px;
+    
+      width: 64px;
+      text-align: center;
+      z-index: 50;
+      height: 64px;
+      border: 2px solid red;
+      font-size: 30px;
+    }
+    #table{
+      height: 512px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+
+<body>
+
+  
+
+
+<a href="roundcriteria.html">Click here to create a new device setting</a> <br>
+<a href="sessionvariables.html">Click here to view created settings.</a> <br>
+<button id="export" class="btn btn-success">
+  Export ALL Data (will take time.)
+</button>
+<div class="progress">
+  <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+    <span class="sr-only">0% Complete</span>
+  </div>
+</div>
+<div id="sessionsSummary">
+</div>
+
+
+
+  
+ 
+
+  <script id="sessions-table-row-tpl" type="text/x-handlebars-template">
+    <table  class="table table-bordered table-hover">
+    <tr >
+      <th>
+        Game
+      </th>
+      
+      <th>
+        Token
+      </th>
+      <th>
+        Tiles Outline
+      </th>
+      <th>
+        Tiles Placed
+      </th>
+    </tr>
+    {{#each sessions}}
+    <tr class="session-row">
+     
+        <td>
+           {{@index }} 
+           <input type="hidden" class="session-id" value="{{id}}">
+        </td>
+        
+        <td>
+        {{ this.attributes.Token }}
+          
+          
+        </td>
+        <td>
+          {{ RoundOne.attributes.TilesOutline }}
+        </td>
+         <td>
+          {{ RoundOne.attributes.TilesPlaced }}
+        </td>
+    </tr>
+    {{/each}}
+    </table>
+  </script>
+
+  
+
+  <script type="text/javascript">
+    Parse.initialize("yBDZCw0sIpUUg8xVCyhVdczEU1zCpPDKKOy0OyLI", "AsC0VYRghXaY0dp5WFFAGsz3On42l8sEFEpF4hA4");
+   
+     
+
+      var SessionsView =   Backbone.View.extend({
+          template: Handlebars.compile($('#sessions-table-row-tpl').html()),
+          render: function(){ 
+           
+              var collection = { sessions: this.collection };
+              console.log(collection);
+              this.$el.html(this.template(collection));
+          }
+      });
+
+    
+
+     
+      
+     
+
+  var Session = Parse.Object.extend("Session");
+var query = new Parse.Query(Session);
+query.include('RoundOne');
+query.limit(1000);
+query.find({
+    success: function (results) {
+        window.sessions = results;
+        var sessionsView= new SessionsView({ collection: results });
+          sessionsView.render();
+          $('#sessionsSummary').html(sessionsView.el);   
+    },
+    error: function (error) {
+        alert("Error: " + error.code + " " + error.message);
+    }
+  });
+      
+    $(document).on('click', '.session-row', function()
+      {
+        var gameId = $(this).find('.session-id').attr('value');
+        window.sessionStorage.setItem('session_id', gameId);
+        window.location.href="session.html"
+      });  
+  </script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.2.0/math.min.js">
+
+  </script>
+  <script type="text/javascript" src="js/navigation.js"></script>
+  <script type="text/javascript" src="js/analysis.js"></script>
+  <script type="text/javascript" src="js/file_utils.js"></script>
+  <script src="js/bulk_data_export.js">
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,297 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>My Parse App</title>
+  <meta name="description" content="My Parse App">
+  <meta name="viewport" content="width=device-width">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  
+  <script src="http://code.jquery.com/jquery.js"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone.js" ></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+  <script src="c3/c3.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+  <script src="js/parse.min.js" ></script>  
+  <style>
+    table#map td{
+      width: 64px;
+      height: 64px;
+      border: 2px solid black;
+      z-index: 0;
+
+
+      
+    }
+  /*.tile-overlay{
+      
+      
+      height: 64px; 
+      width: 64px; 
+      z-index: 10;
+      border-radius: 50%;
+    
+      opacity: .6;
+      
+      
+    }*/
+    .tile-overlay:hover{
+        opacity: 0;
+        cursor: pointer;
+        background-color: rgba(255,153,0, 0.0);
+    }
+
+    .move-1{
+         background-color: rgba(255,153,0,0.5);
+       
+    }
+    .move-2{
+      background-color: blue;
+     
+    }
+    .move-3{
+      background-color: green;
+      
+    }
+    .move-4{
+      background-color: yellow;
+     
+    }
+    .move-12{
+      background-color: orange;
+      
+    }
+    .tile-number {
+      color: white;
+      float: left;
+      margin-top: -64px;
+    opacity: 1.0;
+    /*  width: 64px;*/
+      text-align: center;
+      z-index: 50;
+      /*height: 64px;*/
+      width: 50px;
+      height: 50px;
+     padding: 0px;
+     border-radius: 50%;
+     top: 8px;
+      margin-left: 8px;
+      font-size: 30px;
+    }
+    #table{
+      height: 512px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h2> Input the settings desired </h2>
+    <div class="input-group input-group-lg">
+            Name
+            <input type="text" class="form-control name" placeholder="Desired name" >
+          </div>
+
+          <br>
+          <div class="checkbox">
+              <label>
+                <input type="checkbox" class="allow-take-break"> Allow Take Break
+              </label>
+        <label>
+        </div>
+    <div id="criteria">
+        
+    </div>
+    <button class="btn btn-default" id="addRound" >
+        <span class="glyphicon glyphicon-plus"></span> Add Round
+     </button>
+      <button class="btn btn-success" id="createData" >
+        <span class="glyphicon glyphicon-floppy-disk" id="create"></span> Create
+     </button>
+ </div>
+  <script id="criteria-input-tpl" type="text/x-handlebars-template">
+      <div class="roundData well row">
+
+         <button class="btn btn-danger pull-right delete-round">
+          <span class="glyphicon glyphicon-remove "></span> Delete
+        </button>
+        <div class="col-md-6">
+        <h3> Round {{ roundNumber }} </h3> 
+          <div class="input-group input-group-lg">
+            Goal
+            <input type="text" class="form-control goal-input" placeholder="Enter Round Goal in Here">
+          </div>
+
+          <div class="input-group input-group-lg">
+            Round Time
+            <input type="text" class="form-control round-time-input" placeholder="Time in minutes" >
+          </div>
+          <div class="input-group input-group-lg">
+            Post Round Break Time
+            <input type="text" class="form-control break-time-input" placeholder="Time in minutes">
+          </div>
+        </div>
+         <div class="col-md-6">
+            <br><br><br>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" class="productivity-input"> Show Trip Scoring
+              </label>
+			  <label>
+                <input type="checkbox" class="productivity-live-input"> Live
+              </label>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" class="efficiency-input"> Show Trips Complete
+              </label>
+			  <label>
+                <input type="checkbox" class="efficiency-live-input"> Live
+              </label>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" class="quality-input"> Show Track Placements
+              </label>
+			  <label>
+                <input type="checkbox" class="quality-live-input"> Live
+              </label>
+            </div>
+         </div>
+      </div>
+  </script>
+  <script type="text/javascript" src="js/init.js"></script>
+  <script type="text/javascript">
+    
+
+    var RoundTemplateView =  Backbone.View.extend({
+          template: Handlebars.compile($('#criteria-input-tpl').html()),
+          render: function(){ 
+           
+              var collection = { roundNumber: this.collection.roundNumber };
+             
+              this.$el.html(this.template(collection));
+          }
+      });
+    var rounds = 1;
+    var roundCriteria = { roundNumber: rounds };
+    var roundView = new RoundTemplateView({ collection: roundCriteria });
+          roundView.render();
+          $('#criteria').html(roundView.el);
+
+  $("#addRound").click(function()
+  {
+      rounds++;
+      var roundCriteria = { roundNumber: rounds };
+       var roundView = new RoundTemplateView({ collection: roundCriteria });
+          roundView.render();
+          $('#criteria').append(roundView.el);
+
+  });
+ 
+  $(document.body).on('click', '.delete-round', function(){
+    $(this).closest(".roundData").remove();
+
+  });
+  
+    $("#createData").click(
+      function()
+      {
+        var SessionVariable = Parse.Object.extend("SessionVariable");
+        var sessionVariable = new SessionVariable();
+        var roundCriterias = [];
+        sessionVariable.set("AliasName", $('.name').val());
+        var allowTakeBreak = false;
+
+         if($('.allow-take-break').is(':checked'))
+            {
+              allowTakeBreak = true;
+            }
+
+
+        sessionVariable.set("allowTakeBreak", allowTakeBreak);
+          $( ".roundData" ).each(function( index, roundData ) {
+            
+            var RoundCriteria = Parse.Object.extend("RoundCriteria");
+            var roundCriteria =  new RoundCriteria();
+
+            var goal = $(roundData).find('.goal-input').val();
+            var roundTime = $(roundData).find('.round-time-input').val();
+            var breakTime = $(roundData).find('.break-time-input').val();
+            var effic = false;
+            var prod = false;
+            var qual = false;
+            var efficLive = false;
+            var prodLive = false;
+            var qualLive = false;
+
+            
+
+
+            if($(roundData).find('.efficiency-input').is(':checked'))
+            {
+              effic = true;
+            }
+            if($(roundData).find('.quality-input').is(':checked'))
+            {
+              qual = true;
+            }
+            if($(roundData).find('.productivity-input').is(':checked'))
+            {
+              prod = true;
+            }
+
+
+            if($(roundData).find('.efficiency-live-input').is(':checked'))
+            {
+              efficLive = true;
+            }
+            if($(roundData).find('.quality-live-input').is(':checked'))
+            {
+              qualLive = true;
+            }
+            if($(roundData).find('.productivity-live-input').is(':checked'))
+            {
+              prodLive = true;
+            }
+
+            roundCriteria.set("goal", goal);
+            roundCriteria.set("roundTime", roundTime);
+
+            roundCriteria.set("breakTime", breakTime);
+
+            roundCriteria.set("showEfficiency", effic);
+            roundCriteria.set("showQuality", qual);
+
+            roundCriteria.set("showProductivity", prod);
+
+            roundCriteria.set("efficiencyLive", efficLive);
+            roundCriteria.set("productivityLive", prodLive);
+            roundCriteria.set("qualityLive", qualLive);
+
+            roundCriterias.push(roundCriteria);
+          
+
+          });
+          sessionVariable.set("roundCriterias", roundCriterias);
+          sessionVariable.save(null, {
+            success: function(gameScore) {
+              // Execute any logic that should take place after the object is saved.
+              window.location.href="sessionvariables.html";
+            },
+            error: function(gameScore, error) {
+              // Execute any logic that should take place if the save fails.
+              // error is a Parse.Error with an error code and message.
+              alert('Failed to create new object, with error code: ' + error.message);
+            }
+          });
+      });
+  </script>
+</body>
+
+</html>

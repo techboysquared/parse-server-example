@@ -1,0 +1,236 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>My Parse App</title>
+  <meta name="description" content="My Parse App">
+  <meta name="viewport" content="width=device-width">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  
+  <script src="http://code.jquery.com/jquery.js"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone.js" ></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+  <script src="c3/c3.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+  <script src="js/parse.min.js" ></script>
+  <style>
+    table#map td{
+      width: 64px;
+      height: 64px;
+      border: 2px solid black;
+      z-index: 0;
+
+
+      
+    }
+  .tile-overlay{
+      
+      float: left; 
+      height: 64px; 
+      width: 64px; 
+      z-index: 10;
+     background-color: rgba(255,153,0, 0.75);
+     background-blend-mode: darken, luminosity;
+      opacity: .6;
+      border: 2px solid red;
+      
+    }
+    .tile-overlay:hover{
+        opacity: 0;
+        cursor: pointer;
+        background-color: rgba(255,153,0, 0.0);
+    }
+    .tile-number {
+      color: white;
+      float: left;
+      margin-top: -64px;
+    
+      width: 64px;
+      text-align: center;
+      z-index: 50;
+      height: 64px;
+      border: 2px solid red;
+      font-size: 30px;
+    }
+    #table{
+      height: 512px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+
+<body>
+
+  
+
+
+
+
+<div id="roundSummary">
+</div>
+
+
+
+  
+ 
+
+  <script id="game-table-row-tpl" type="text/x-handlebars-template">
+    <table  class="table table-bordered table-hover">
+    <tr >
+      <th>
+        Game
+      </th>
+      
+      <th>
+        Tiles Inline
+      </th>
+      <th>
+        Tiles Outline
+      </th>
+      <th>
+        Tiles Placed
+      </th>
+      <th>
+        Tiles Scored
+      </th>
+      <th>
+        T1 (Speed)
+      </th>
+      <th>
+        T2 (Erase)
+      </th>
+      <th>
+        T3 (Discard)
+      </th>
+      <th>
+        T4 (Loop)
+      </th>
+      <th>
+        T5 (Extend)
+      </th>
+     
+      <th>
+        T8 (Cont Loop)
+      </th>
+      <th>
+        Reviewed
+      </th>
+      <th>
+        Notes
+      </th>
+    </tr>
+    {{#each games}}
+    <tr class="game-row">
+     
+        <td>
+           {{@index }} 
+           <input type="hidden" class="game-id" value="{{id}}">
+        </td>
+        
+        <td>
+        {{ attributes.TilesInline }}
+          
+          
+        </td>
+        <td>
+          {{ attributes.TilesOutline }}
+        </td>
+         <td>
+          {{ attributes.TilesPlaced }}
+        </td>
+        <td>
+          {{ attributes.PointsScored }}
+        </td>
+        <td>
+          {{ attributes.T1 }}
+        </td>
+        <td>
+          {{ attributes.T2 }}
+        </td>
+        <td>
+          {{attributes.T3}}
+        </td>
+        <td>
+          {{ attributes.T4 }}
+        </td>
+        <td>
+          {{ attributes.T5 }}
+        </td>
+      
+        <td>
+          {{ attributes.T8 }}
+        </td>
+        <td>
+          {{#if attributes.reviewed}}
+            Yes
+          {{else}}
+            No
+          {{/if}}
+        </td>
+        <td>
+          {{#if attributes.notes}}
+            {{attributes.notes}}
+          {{/if}}
+        </td>
+
+    </tr>
+    {{/each}}
+    </table>
+  </script>
+
+  
+  <script src="js/init.js"></script>
+  <script type="text/javascript">
+    
+   
+     
+
+      var RoundView =  Backbone.View.extend({
+          template: Handlebars.compile($('#game-table-row-tpl').html()),
+          render: function(){ 
+           
+              var collection = { games: this.collection.get("GamesPlayed") };
+              console.log(collection);
+              this.$el.html(this.template(collection));
+          }
+      });
+
+    
+
+     
+      
+      var round = window.sessionStorage.getItem("round_id");
+
+      
+      console.log("round id: " + round);
+      var query = new Parse.Query('Round');
+      query.include('GamesPlayed');
+     
+  
+      query.get(round, {
+        success: function(roundSummary) {
+          
+          var roundView= new RoundView({ collection: roundSummary });
+          roundView.render();
+          $('#roundSummary').html(roundView.el);           
+         
+        },
+
+        error: function(object, error) {
+          // error is an instance of Parse.Error.
+          console.log(error);
+        }
+    });
+    $(document).on('click', '.game-row', function()
+      {
+        var gameId = $(this).find('.game-id').attr('value');
+        window.sessionStorage.setItem('game_id', gameId);
+        window.location.href="game.html"
+      });  
+  </script>
+</body>
+
+</html>
